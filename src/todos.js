@@ -12,6 +12,7 @@ import {
   Right,
   Title,
 } from "native-base";
+import moment from "moment";
 
 import Todo from "./todo";
 
@@ -19,11 +20,16 @@ const Todos = () => {
   const [text, setText] = useState("");
   const [todos, setTodos] = useState([]);
 
+  const createdOn = moment().format("DD/MM/YY, h:mm:ss a");
+
+  // CARGAR DATOS DE INICIO
+
   useEffect(() => {
     const getData = async () => {
       try {
         const todosStorage = await AsyncStorage.getItem("savedTodos");
         if (todosStorage) {
+          console.log(createdOn);
           setTodos(JSON.parse(todosStorage));
         }
       } catch (e) {
@@ -33,6 +39,31 @@ const Todos = () => {
     getData();
   }, []);
 
+  // AGREGAR UN TODO
+
+  const addTodo = (text) => {
+    if (text == "") {
+      noTextAlert();
+    } else {
+      setTodos((prevTodos) => [
+        ...prevTodos,
+        { todo: text, id: Math.random().toString(), createdOn },
+      ]);
+      setText("");
+      storeData(JSON.stringify(todos));
+    }
+  };
+
+  // ELIMINAR UN TODO
+
+  const deleteTodo = (id) => {
+    const filteredTodos = todos.filter((todo) => todo.id != id);
+    setTodos(filteredTodos);
+    storeData(JSON.stringify(filteredTodos));
+  };
+
+  // PERSISTIR DATOS EN STORAGE
+
   const storeData = async (value) => {
     try {
       await AsyncStorage.setItem("savedTodos", value);
@@ -41,36 +72,16 @@ const Todos = () => {
     }
   };
 
-  const addTodo = (text) => {
-    if (text == "") {
-      noTextAlert();
-    } else {
-      setTodos((prevTodos) => [
-        { todo: text, id: Math.random().toString() },
-        ...prevTodos,
-      ]);
-      storeData(JSON.stringify(todos));
-    }
-  };
-
   const noTextAlert = () =>
-    Alert.alert("Error", "Por favor agregá algun texto", [
+    Alert.alert("Ops!", "Por favor agregá algun texto", [
       {
         text: "Ok",
         onPress: () => console.log("Cancel Pressed"),
       },
     ]);
 
-  const deleteTodo = (id) => {
-    setTodos((prevTodos) => {
-      return prevTodos.filter((todo) => todo.id != id);
-    });
-  };
-
-  // console.log(todos);
-
   return (
-    <View style={{ flex: 1 }}>
+    <View style={styles.container}>
       <Header>
         <Left />
         <Body>
@@ -84,12 +95,11 @@ const Todos = () => {
             <View style={styles.formInside}>
               <Input
                 placeholder="Add Todo"
-                onChangeText={(val) => {
-                  setText(val);
-                }}
+                onChangeText={(val) => setText(val)}
+                value={text}
               />
             </View>
-            <View style={{ width: "30%" }}>
+            <View>
               <Button onPress={() => addTodo(text)}>
                 <Text>Add Todo</Text>
               </Button>
@@ -103,7 +113,11 @@ const Todos = () => {
             data={todos}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <Todo todos={item} deleteTodo={deleteTodo} />
+              <Todo
+                todos={item}
+                deleteTodo={deleteTodo}
+                createdOn={createdOn}
+              />
             )}
           />
         </View>
@@ -113,6 +127,10 @@ const Todos = () => {
 };
 
 const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: "#eeff",
+  },
   content: {
     padding: 15,
     width: "100%",
@@ -123,7 +141,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   formInside: {
-    width: "70%",
+    flex: 1,
     borderBottomWidth: 1,
     borderBottomColor: "#ccc",
     marginRight: 15,

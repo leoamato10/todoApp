@@ -1,18 +1,15 @@
 import React from "react";
 import { Card, CardItem, Body, Text, Right, Icon } from "native-base";
-import moment from "moment";
 
-const Todo = ({ todos, deleteTodo }) => {
-  const createdOn = moment().subtract(10, "days").calendar().toString();
-
+const Todo = ({ todos, deleteTodo, createdOn }) => {
   return (
     <Card>
       <CardItem button onPress={() => deleteTodo(todos.id)}>
         <Body>
-          <Text>
+          <Text style={{ width: 300 }}>
             {todos.todo}
             <Text style={{ color: "#ccc", fontSize: 10 }}>
-              {`(${createdOn})`}
+              {` - (${createdOn})`}
             </Text>
           </Text>
         </Body>
