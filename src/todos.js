@@ -20,8 +20,6 @@ const Todos = () => {
   const [text, setText] = useState("");
   const [todos, setTodos] = useState([]);
 
-  const createdOn = moment().format("DD/MM/YY, h:mm:ss a");
-
   // CARGAR DATOS DE INICIO
 
   useEffect(() => {
@@ -29,7 +27,6 @@ const Todos = () => {
       try {
         const todosStorage = await AsyncStorage.getItem("savedTodos");
         if (todosStorage) {
-          console.log(createdOn);
           setTodos(JSON.parse(todosStorage));
         }
       } catch (e) {
@@ -39,11 +36,18 @@ const Todos = () => {
     getData();
   }, []);
 
+  useEffect(() => {
+    console.log(todos);
+  }, [todos]);
+
   // AGREGAR UN TODO
 
   const addTodo = (text) => {
+    let createdOn = moment().format("DD/MM/YY, h:mm:ss a");
+
     if (text == "") {
       noTextAlert();
+      return;
     } else {
       setTodos((prevTodos) => [
         ...prevTodos,
@@ -113,11 +117,7 @@ const Todos = () => {
             data={todos}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <Todo
-                todos={item}
-                deleteTodo={deleteTodo}
-                createdOn={createdOn}
-              />
+              <Todo todos={item} deleteTodo={deleteTodo} />
             )}
           />
         </View>
