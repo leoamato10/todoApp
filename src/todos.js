@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { View, StyleSheet, FlatList, Alert } from "react-native";
+import {
+  View,
+  StyleSheet,
+  FlatList,
+  Alert,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import {
   Header,
@@ -11,14 +18,17 @@ import {
   Body,
   Right,
   Title,
+  Fab,
+  Icon,
 } from "native-base";
 import moment from "moment";
 
 import Todo from "./todo";
 
 const Todos = () => {
-  const [text, setText] = useState("");
   const [todos, setTodos] = useState([]);
+  const [getTodos, setGetTodos] = useState(true);
+  const [text, setText] = useState("");
 
   // CARGAR DATOS DE INICIO
 
@@ -28,17 +38,18 @@ const Todos = () => {
         const todosStorage = await AsyncStorage.getItem("savedTodos");
         if (todosStorage) {
           setTodos(JSON.parse(todosStorage));
+
+          setGetTodos(false);
         }
       } catch (e) {
         console.log(e);
       }
     };
-    getData();
-  }, []);
 
-  useEffect(() => {
-    console.log(todos);
-  }, [todos]);
+    if (getTodos) {
+      getData();
+    }
+  }, [getTodos]);
 
   // AGREGAR UN TODO
 
@@ -49,12 +60,15 @@ const Todos = () => {
       noTextAlert();
       return;
     } else {
-      setTodos((prevTodos) => [
-        ...prevTodos,
-        { todo: text, id: Math.random().toString(), createdOn },
-      ]);
+      const newTodo = {};
+      newTodo.id = Math.random().toString();
+      newTodo.text = text;
+      newTodo.createdOn = createdOn;
+      const todosNuevo = [...todos, newTodo];
+      setTodos(todosNuevo);
       setText("");
-      storeData(JSON.stringify(todos));
+      storeData(JSON.stringify(todosNuevo));
+      setGetTodos(true);
     }
   };
 
@@ -77,52 +91,72 @@ const Todos = () => {
   };
 
   const noTextAlert = () =>
-    Alert.alert("Ops!", "Por favor agregá algun texto", [
+    Alert.alert("Ops!", "Por favor agregá algun texto a la Tarea", [
       {
         text: "Ok",
-        onPress: () => console.log("Cancel Pressed"),
+        onPress: () => {},
       },
     ]);
 
   return (
-    <View style={styles.container}>
-      <Header>
-        <Left />
-        <Body>
-          <Title>Todo App</Title>
-        </Body>
-        <Right />
-      </Header>
-      <View>
-        <View style={styles.content}>
-          <Form style={styles.form}>
-            <View style={styles.formInside}>
-              <Input
-                placeholder="Add Todo"
-                onChangeText={(val) => setText(val)}
-                value={text}
-              />
-            </View>
-            <View>
-              <Button onPress={() => addTodo(text)}>
-                <Text>Add Todo</Text>
-              </Button>
-            </View>
-          </Form>
-        </View>
+    <TouchableWithoutFeedback
+      onPress={() => {
+        Keyboard.dismiss();
+      }}
+    >
+      <View style={styles.container}>
+        <Header>
+          <Left style={{ flex: 1 }}></Left>
+          <Body style={{ flex: 1 }}>
+            <Title style={{ alignSelf: "center", fontSize: 20 }}>
+              Todo App
+            </Title>
+          </Body>
+          <Right style={{ flex: 1 }}></Right>
+        </Header>
 
-        <View style={{ paddingHorizontal: 10 }}>
-          <FlatList
-            style={{ marginBottom: 206 }}
-            data={todos}
-            keyExtractor={(item) => item.id}
-            renderItem={({ item }) => (
-              <Todo todos={item} deleteTodo={deleteTodo} />
-            )}
-          />
+        <Fab
+          containerStyle={{}}
+          style={{
+            backgroundColor: "#5067FF",
+          }}
+          position="bottomRight"
+          onPress={() => addTodo(text)}
+        >
+          <Icon name="add" />
+        </Fab>
+
+        <View>
+          <View style={styles.content}>
+            <Form style={styles.form}>
+              <View style={styles.formInside}>
+                <Input
+                  placeholder="Add Todo"
+                  onChangeText={(val) => setText(val)}
+                  value={text}
+                />
+              </View>
+              <View>
+                <Button onPress={() => addTodo(text)}>
+                  <Text>Add Todo</Text>
+                </Button>
+              </View>
+            </Form>
+          </View>
+
+          <View style={{ paddingHorizontal: 10 }}>
+            <FlatList
+              style={{ marginBottom: 206 }}
+              data={todos}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <Todo todos={item} deleteTodo={deleteTodo} />
+              )}
+            />
+          </View>
         </View>
       </View>
-    </View>
+    </TouchableWithoutFeedback>
   );
 };
 

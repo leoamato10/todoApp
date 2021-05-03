@@ -7,7 +7,7 @@ const Todo = ({ todos, deleteTodo }) => {
       <CardItem button onPress={() => deleteTodo(todos.id)}>
         <Body>
           <Text style={{ width: 300 }}>
-            {todos.todo}
+            {todos.text}
             <Text style={{ color: "#ccc", fontSize: 10 }}>
               {` - (${todos.createdOn})`}
             </Text>
